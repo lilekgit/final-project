@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+.AppleDouble
+._*
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# База данных
+scheduler.db
+*.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Зависимости
+vendor/
+
+# Логи
+*.log
