@@ -27,11 +27,11 @@ func checkDate(task *db.Task) error {
 
 	// Если дата не указана — берём сегодняшнее число
 	if task.Date == "" {
-		task.Date = now.Format(DateFormat)
+		task.Date = now.Format(db.DateFormat)
 	}
 
 	// Парсим дату
-	t, err := time.Parse(DateFormat, task.Date)
+	t, err := time.Parse(db.DateFormat, task.Date)
 	if err != nil {
 		return fmt.Errorf("некорректный формат даты")
 	}
@@ -49,7 +49,7 @@ func checkDate(task *db.Task) error {
 	if afterNow(now, t) {
 		if task.Repeat == "" {
 			// Нет правила — берём сегодня
-			task.Date = now.Format(DateFormat)
+			task.Date = now.Format(db.DateFormat)
 		} else {
 			// Есть правило — берём вычисленную следующую дату
 			task.Date = next

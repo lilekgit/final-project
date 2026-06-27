@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+// DateFormat — формат даты для хранения в БД
+const DateFormat = "20060102"
+
+// SearchDateFormat — формат даты для поиска
+const SearchDateFormat = "02.01.2006"
+
 // Task описывает задачу планировщика
 type Task struct {
 	ID      string `json:"id"`
@@ -27,26 +33,27 @@ func AddTask(task *Task) (int64, error) {
 }
 
 // Tasks возвращает список ближайших задач
-// Если search не пустой, выполняется поиск по заголовку/комментарию или по дате
 func Tasks(search string, limit int) ([]*Task, error) {
-	// Инициализируем пустой слайс, чтобы избежать {"tasks":null} в JSON
 	tasks := make([]*Task, 0)
 
 	var rows *sql.Rows
 	var err error
 
-	if search == "" {
+	switch {
+	case search == "":
 		// Без поиска — возвращаем все задачи
 		query := `SELECT id, date, title, comment, repeat FROM scheduler ORDER BY date LIMIT ?`
 		rows, err = DB.Query(query, limit)
-	} else {
-		// Проверяем, является ли search датой в формате 02.01.2006
-		if t, parseErr := time.Parse("02.01.2006", search); parseErr == nil {
-			dateStr := t.Format("20060102")
+	default:
+		// Проверяем, является ли search датой
+		if t, parseErr := time.Parse(SearchDateFormat, search); parseErr == nil {
+			// Это дата — ищем по дате
+			dateStr := t.Format(DateFormat)
 			query := `SELECT id, date, title, comment, repeat FROM scheduler 
 			          WHERE date = ? ORDER BY date LIMIT ?`
 			rows, err = DB.Query(query, dateStr, limit)
 		} else {
+			// Это подстрока — ищем в заголовке и комментарии
 			searchPattern := "%" + search + "%"
 			query := `SELECT id, date, title, comment, repeat FROM scheduler 
 			          WHERE (title LIKE ? COLLATE NOCASE OR comment LIKE ? COLLATE NOCASE) 
@@ -60,7 +67,6 @@ func Tasks(search string, limit int) ([]*Task, error) {
 	}
 	defer rows.Close()
 
-	// Сканируем результаты
 	for rows.Next() {
 		task := new(Task)
 		if err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
@@ -69,7 +75,6 @@ func Tasks(search string, limit int) ([]*Task, error) {
 		tasks = append(tasks, task)
 	}
 
-	// Проверяем ошибку после итерации
 	if err = rows.Err(); err != nil {
 		return tasks, fmt.Errorf("ошибка при обходе результатов: %w", err)
 	}

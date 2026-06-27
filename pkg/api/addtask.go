@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,7 +17,6 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "ошибка десериализации JSON", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	// Проверяем заголовок
 	if task.Title == "" {
@@ -35,7 +33,7 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Добавляем задачу в БД
 	id, err := db.AddTask(&task)
 	if err != nil {
-		writeError(w, fmt.Sprintf("ошибка добавления задачи: %v", err), http.StatusInternalServerError)
+		writeError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

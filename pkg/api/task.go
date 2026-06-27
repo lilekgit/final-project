@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"go_final_project/pkg/db"
@@ -33,7 +34,6 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "ошибка десериализации JSON", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	if task.ID == "" {
 		writeError(w, "не указан идентификатор задачи", http.StatusBadRequest)
@@ -93,6 +93,9 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err.Error(), http.StatusNotFound)
 		return
 	}
+
+	// Очищаем repeat от пробелов
+	task.Repeat = strings.TrimSpace(task.Repeat)
 
 	// Если нет правила повторения — удаляем задачу
 	if task.Repeat == "" {
